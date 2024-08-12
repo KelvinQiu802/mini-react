@@ -1,9 +1,15 @@
-import React from 'react';
+/**@jsx Reaction.createElement */
+import Reaction from './core/reaction';
+import { renderRecursively } from './core/reaction-dom';
 
-function Main() {
-  return <div>Hello World</div>;
-}
+const root = document.getElementById('root');
 
-console.log(Main);
+const el = (
+  <div>
+    <h1>This is Title</h1>
+    <h2>Hello World</h2>
+    <h3>Mini React</h3>
+  </div>
+);
 
-export default Main;
+renderRecursively(el, root as HTMLElement);
