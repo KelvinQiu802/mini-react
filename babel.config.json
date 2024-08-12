@@ -1,0 +1,22 @@
+{
+  "presets": [
+    "@babel/preset-env",
+    [
+      "@babel/preset-typescript",
+      {
+        "isTSX": true, // 支持 TSX 语法
+        "allExtensions": true,
+        "jsxPragma": "Reaction"
+      }
+    ]
+  ],
+  "plugins": [
+    [
+      "@babel/plugin-transform-react-jsx",
+      {
+        "runtime": "classic",
+        "pragma": "Reaction.createElement" // 用自己实现的 createElement 方法替换 React.createElement
+      }
+    ]
+  ]
+}
