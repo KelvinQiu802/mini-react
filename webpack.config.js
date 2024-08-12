@@ -14,6 +14,7 @@ module.exports = {
   },
   devServer: {
     static: path.join(__dirname, 'dist'),
+    open: true,
     port: 9000,
   },
   externals: {
@@ -22,7 +23,7 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.tsx$/,
+        test: /\.(tsx|ts)$/,
         use: 'babel-loader',
         exclude: /node_modules/,
       },
