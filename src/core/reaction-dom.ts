@@ -1,28 +1,21 @@
+import { renderRecursively } from './reaction';
+
 const ReactionDOM = {
-  renderRecursively,
+  createRoot,
 };
 
-function renderRecursively(element: IElement, container: HTMLElement | Text) {
-  // 1. 创建DOM节点
-  const dom =
-    element.type === 'TEXT_ELEMENT'
-      ? document.createTextNode('')
-      : document.createElement(element.type);
-
-  // 2. 设置属性
-  for (const key in element.props) {
-    if (key !== 'children' && element.props.hasOwnProperty(key)) {
-      dom[key] = element.props[key];
-    }
-  }
-
-  // 3. 递归渲染子节点
-  element.props.children.forEach((child) =>
-    renderRecursively(child as IElement, dom)
-  );
-
-  container.appendChild(dom);
+/**
+ * Creates a root element for rendering in the specified container.
+ * @param container - The HTML element that serves as the container for the root element.
+ * @returns An object with a `render` method that can be used to render an element into the root.
+ */
+function createRoot(container: HTMLElement) {
+  return {
+    render(element: IElement) {
+      renderRecursively(element, container);
+    },
+  };
 }
 
-export { renderRecursively };
+export { createRoot };
 export default ReactionDOM;

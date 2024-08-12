@@ -1,6 +1,33 @@
 const Reaction = {
   createElement,
+  renderRecursively,
 };
+
+/**
+ * Renders the given element recursively into the specified container.
+ *
+ * @param element - The element to render.
+ * @param container - The container element where the element will be rendered.
+ */
+function renderRecursively(element: IElement, container: HTMLElement | Text) {
+  // 1. 创建DOM节点
+  const dom =
+    element.type === 'TEXT_ELEMENT'
+      ? document.createTextNode('')
+      : document.createElement(element.type);
+  // 2. 设置属性
+  for (const key in element.props) {
+    if (key !== 'children' && element.props.hasOwnProperty(key)) {
+      dom[key] = element.props[key];
+    }
+  }
+  // 3. 递归渲染子节点
+  element.props.children.forEach((child) =>
+    renderRecursively(child as IElement, dom)
+  );
+  // 4. 将DOM节点挂载到容器上
+  container.appendChild(dom);
+}
 
 /**
  * Creates an element with the specified type, props, and children.
@@ -43,5 +70,5 @@ function createTextNode(text: string): ITextNode {
   };
 }
 
-export { createElement };
+export { createElement, renderRecursively };
 export default Reaction;
