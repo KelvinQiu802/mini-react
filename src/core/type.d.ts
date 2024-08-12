@@ -1,4 +1,4 @@
-type ElementType = string | 'TEXT_ELEMENT';
+type ElementType = string;
 type ChildType = IElement | string;
 
 interface IElement {
