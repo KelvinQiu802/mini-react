@@ -1,5 +1,10 @@
 # mini-react
 
+```shell
+pnpm i
+pnpm run dev
+```
+
 ## 创建并渲染元素
 
 所有React项目都包含的一行代码
