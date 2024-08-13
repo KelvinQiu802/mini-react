@@ -1,4 +1,4 @@
-import { renderRecursively } from './reaction';
+import { render } from './reaction';
 
 const ReactionDOM = {
   createRoot,
@@ -12,7 +12,7 @@ const ReactionDOM = {
 function createRoot(container: HTMLElement) {
   return {
     render(element: IElement) {
-      renderRecursively(element, container);
+      render(element, container);
     },
   };
 }

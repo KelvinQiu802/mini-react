@@ -1,5 +1,5 @@
 type ElementType = string;
-type ChildType = IElement | string;
+type ChildType = IElement | ITextNode;
 
 interface IElement {
   type: ElementType;
@@ -13,5 +13,17 @@ interface ITextNode {
   props: {
     nodeValue: string;
     children: [];
+  };
+}
+
+interface IFiber {
+  alternate: IFiber;
+  return: IFiber;
+  child: IFiber;
+  sibling: IFiber;
+  type: ElementType;
+  stateNode: Node;
+  props: {
+    children: ChildType[];
   };
 }
