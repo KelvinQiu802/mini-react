@@ -5,6 +5,7 @@ const Reaction = {
 };
 
 let nextUnitOfWork: IFiber = null;
+let rootFiber: IFiber = null; // 根节点, commitRoot 时用到
 
 /**
  * The workLoop function performs a work loop until there is no more work to be done or the idle deadline is reached.
@@ -15,6 +16,16 @@ function workLoop(ddl: IdleDeadline) {
   while (nextUnitOfWork && ddl.timeRemaining() > 1) {
     nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
   }
+
+  if (!nextUnitOfWork && rootFiber) {
+    console.info('Render complete.');
+    console.groupEnd(); // end render phase
+    console.group('Commit Phase');
+    console.info('Committing root fiber...');
+    commitRoot(rootFiber);
+    console.info('Commit complete.');
+    console.groupEnd();
+  }
   requestIdleCallback(workLoop);
 }
 /**
@@ -24,18 +35,20 @@ function workLoop(ddl: IdleDeadline) {
  * @param container - The container node to render the element into.
  */
 function render(element: IElement, container: Node) {
-  const rootFiber: IFiber = {
+  rootFiber = {
     alternate: null,
     return: null,
     child: null,
     sibling: null,
-    type: element.type,
+    type: 'root',
     stateNode: container,
     props: {
       children: [element], // 这里的child还不是fiber
     },
   };
   nextUnitOfWork = rootFiber; // 开启渲染
+  console.group('Render Phase');
+  console.info('Render Start...');
   requestIdleCallback(workLoop);
 }
 
@@ -46,12 +59,12 @@ function render(element: IElement, container: Node) {
  * @returns The next unit of work to be performed.
  */
 function performUnitOfWork(fiber: IFiber): IFiber {
+  console.info(`Rendering ${fiber.type} ...`);
   // 1. 创建DOM节点
   if (!fiber.stateNode) {
     const dom = createDOM(fiber.type);
     updateProps(fiber.props, dom);
     fiber.stateNode = dom;
-    fiber.return.stateNode.appendChild(dom);
   }
   // 2. 遍历children创建子Fiber,构建一层Fiber树
   const children = fiber.props.children;
@@ -83,6 +96,29 @@ function performUnitOfWork(fiber: IFiber): IFiber {
   if (fiber.child) return fiber.child;
   if (fiber.sibling) return fiber.sibling;
   return fiber.return.sibling;
+}
+
+/**
+ * Commits the changes made in the root fiber to the DOM.
+ *
+ * @param {IFiber} rootFiber - The root fiber representing the component tree.
+ */
+function commitRoot(fiber: IFiber) {
+  commitWork(fiber.child);
+  rootFiber = null; // 清空rootFiber，表示commit结束
+}
+
+/**
+ * Commits the work done by a fiber to the DOM.
+ *
+ * @param fiber - The fiber to commit.
+ */
+function commitWork(fiber: IFiber) {
+  if (!fiber) return;
+  console.info(`Committing ${fiber.type} ...`);
+  fiber.return.stateNode.appendChild(fiber.stateNode);
+  commitWork(fiber.child);
+  commitWork(fiber.sibling);
 }
 
 /**

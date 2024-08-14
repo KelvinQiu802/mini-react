@@ -102,3 +102,9 @@ React.createRoot(document.getElementById('root')).render(<App />);
   props
 }
 ```
+
+## Render 和 Commit
+
+如果在每一次render完一个fiber，立刻commit到DOM树中，很可能会出现用户同时看到一部分更新后的UI和一部分未更新的UI
+
+为了解决这个问题，需要吧Render和Commit两个阶段分开
