@@ -53,23 +53,39 @@ function render(element: IElement, container: Node) {
 }
 
 /**
- * Performs a unit of work on a fiber.
+ * Updates an object component.
  *
- * @param fiber - The fiber to perform work on.
- * @returns The next unit of work to be performed.
+ * @param fiber - The fiber representing the component.
  */
-function performUnitOfWork(fiber: IFiber): IFiber {
-  console.info(`Rendering ${fiber.type} ...`);
+function updateObjectComponent(fiber: IFiber) {
   // 1. 创建DOM节点, 函数组件的函数本身是没有对应的DOM节点的
-  if (!isFunctionComponent(fiber) && !fiber.stateNode) {
+  if (!fiber.stateNode) {
     const dom = createDOM(fiber.type as string);
     updateProps(fiber.props, dom);
     fiber.stateNode = dom;
   }
+  const children = fiber.props.children;
   // 2. 遍历children创建子Fiber,构建一层Fiber树
-  const children = isFunctionComponent(fiber)
-    ? [(fiber.type as Function)(fiber.props)] // 函数组件的child是函数的返回值
-    : fiber.props.children;
+  createChildrenFiber(fiber, children);
+}
+
+/**
+ * Updates a function component.
+ *
+ * @param fiber - The fiber representing the function component.
+ */
+function updateFunctionComponent(fiber: IFiber) {
+  const children = [(fiber.type as Function)(fiber.props)];
+  createChildrenFiber(fiber, children);
+}
+
+/**
+ * Creates child fibers for a given parent fiber.
+ *
+ * @param fiber - The parent fiber.
+ * @param children - An array of child elements.
+ */
+function createChildrenFiber(fiber: IFiber, children: ChildType[]): void {
   let prevFiber: IFiber = null;
   for (let i = 0; i < children.length; i++) {
     const child = children[i];
@@ -89,6 +105,22 @@ function performUnitOfWork(fiber: IFiber): IFiber {
     }
     prevFiber = newFiber;
   }
+}
+
+/**
+ * Performs a unit of work on a fiber.
+ *
+ * @param fiber - The fiber to perform work on.
+ * @returns The next unit of work to be performed.
+ */
+function performUnitOfWork(fiber: IFiber): IFiber {
+  console.info(`Rendering ${fiber.type} ...`);
+
+  // 根据fiber的类型，调用不同的更新函数
+  isFunctionComponent(fiber)
+    ? updateFunctionComponent(fiber)
+    : updateObjectComponent(fiber);
+
   /**
    * 返回下一个工作单元
    * 1. 如果有子节点，返回子节点
