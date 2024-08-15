@@ -60,14 +60,16 @@ function render(element: IElement, container: Node) {
  */
 function performUnitOfWork(fiber: IFiber): IFiber {
   console.info(`Rendering ${fiber.type} ...`);
-  // 1. 创建DOM节点
-  if (!fiber.stateNode) {
-    const dom = createDOM(fiber.type);
+  // 1. 创建DOM节点, 函数组件的函数本身是没有对应的DOM节点的
+  if (!isFunctionComponent(fiber) && !fiber.stateNode) {
+    const dom = createDOM(fiber.type as string);
     updateProps(fiber.props, dom);
     fiber.stateNode = dom;
   }
   // 2. 遍历children创建子Fiber,构建一层Fiber树
-  const children = fiber.props.children;
+  const children = isFunctionComponent(fiber)
+    ? [(fiber.type as Function)(fiber.props)] // 函数组件的child是函数的返回值
+    : fiber.props.children;
   let prevFiber: IFiber = null;
   for (let i = 0; i < children.length; i++) {
     const child = children[i];
@@ -91,11 +93,26 @@ function performUnitOfWork(fiber: IFiber): IFiber {
    * 返回下一个工作单元
    * 1. 如果有子节点，返回子节点
    * 2. 如果有兄弟节点，返回兄弟节点
-   * 3. 如果父节点有兄弟节点，返回父节点的兄弟节点
+   * 3. 向上查找第一个有兄弟节点的祖先节点，返回兄弟节点
    */
   if (fiber.child) return fiber.child;
   if (fiber.sibling) return fiber.sibling;
-  return fiber.return.sibling;
+  let nextFiber = fiber.return;
+  while (nextFiber) {
+    if (nextFiber.sibling) return nextFiber.sibling;
+    nextFiber = nextFiber.return;
+  }
+  return null;
+}
+
+/**
+ * Checks if the given fiber is a function component.
+ *
+ * @param fiber - The fiber to check.
+ * @returns A boolean indicating whether the fiber is a function component.
+ */
+function isFunctionComponent(fiber: IFiber): boolean {
+  return typeof fiber.type === 'function';
 }
 
 /**
@@ -116,7 +133,15 @@ function commitRoot(fiber: IFiber) {
 function commitWork(fiber: IFiber) {
   if (!fiber) return;
   console.info(`Committing ${fiber.type} ...`);
-  fiber.return.stateNode.appendChild(fiber.stateNode);
+  // 如果是FC的第一个元素，函数没有对应的DOM节点可以挂载，要向上找到有DOM节点的父节点
+  let parentFiber = fiber.return;
+  while (!parentFiber.stateNode) {
+    parentFiber = parentFiber.return;
+  }
+  if (fiber.stateNode) {
+    // FC没有对应的DOM节点，不能被appendChild
+    parentFiber.stateNode.appendChild(fiber.stateNode);
+  }
   commitWork(fiber.child);
   commitWork(fiber.sibling);
 }
@@ -159,7 +184,7 @@ function renderRecursively(element: IElement, container: Node) {
   const dom =
     element.type === 'TEXT_ELEMENT'
       ? document.createTextNode('')
-      : document.createElement(element.type);
+      : document.createElement(element.type as string); // 暂时不考虑FC
   // 2. 设置属性
   for (const key in element.props) {
     if (key !== 'children' && element.props.hasOwnProperty(key)) {
@@ -192,8 +217,8 @@ function createElement(
     props: {
       ...props,
       children: children.map((child) =>
-        // 如果 child 是字符串，创建文本节点
-        typeof child === 'string' ? createTextNode(child) : child
+        // 如果子节点是对象，直接返回；如果是其他（字符串，数字），创建文本节点
+        typeof child === 'object' ? child : createTextNode(child)
       ),
     },
   };

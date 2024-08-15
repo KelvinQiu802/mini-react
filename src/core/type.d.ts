@@ -1,4 +1,4 @@
-type ElementType = string;
+type ElementType = string | Function;
 type ChildType = IElement | ITextNode;
 
 interface IElement {

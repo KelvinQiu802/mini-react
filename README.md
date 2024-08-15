@@ -108,3 +108,39 @@ React.createRoot(document.getElementById('root')).render(<App />);
 如果在每一次render完一个fiber，立刻commit到DOM树中，很可能会出现用户同时看到一部分更新后的UI和一部分未更新的UI
 
 为了解决这个问题，需要吧Render和Commit两个阶段分开
+
+## Function Component
+
+可以把函数组件的函数理解为一个箱子，并没有一个真正的DOM节点对应这个箱子
+
+```jsx
+function App({ name }) {
+  return <h1>Hello</h1>
+}
+
+<App name={"Kelvin"}/>
+```
+
+经过Babel编译后会变成
+
+```js
+function App({
+  name
+}) {
+  return /*#__PURE__*/React.createElement("h1", null, "Hello");
+}
+/*#__PURE__*/React.createElement(App, {
+  name: "Kelvin"
+});
+```
+
+所以其实调用函数组件的过程就是执行这个函数，它的返回值就是需要渲染的节点
+
+```js
+/**
+ * 这句代码会把App这个函数当作type封装成VDOM
+ * 所以函数组件的VDOM的type是函数
+ * 如果想要拿到函数组件的child，就需要调用它
+ */
+React.createElement(App, null)
+```
