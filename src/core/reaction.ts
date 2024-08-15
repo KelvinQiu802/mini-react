@@ -117,9 +117,11 @@ function performUnitOfWork(fiber: IFiber): IFiber {
   console.info(`Rendering ${fiber.type} ...`);
 
   // 根据fiber的类型，调用不同的更新函数
-  isFunctionComponent(fiber)
-    ? updateFunctionComponent(fiber)
-    : updateObjectComponent(fiber);
+  if (isFunctionComponent(fiber)) {
+    updateFunctionComponent(fiber);
+  } else {
+    updateObjectComponent(fiber);
+  }
 
   /**
    * 返回下一个工作单元
