@@ -6,7 +6,7 @@ const Reaction = {
 };
 
 let nextUnitOfWork: IFiber = null;
-let rootFiber: IFiber = null; // 根节点, commitRoot 时用到
+let wipRoot: IFiber = null; // 根节点, commitRoot 时用到
 let prevRootFiber: IFiber = null; // 上一次的根节点
 
 /**
@@ -19,12 +19,12 @@ function workLoop(ddl: IdleDeadline) {
     nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
   }
 
-  if (!nextUnitOfWork && rootFiber) {
+  if (!nextUnitOfWork && wipRoot) {
     console.info('Render complete.');
     console.groupEnd(); // end render phase
     console.group('Commit Phase');
     console.info('Committing root fiber...');
-    commitRoot(rootFiber);
+    commitRoot(wipRoot);
     console.info('Commit complete.');
     console.groupEnd();
   }
@@ -37,7 +37,7 @@ function workLoop(ddl: IdleDeadline) {
  * @param container - The container node to render the element into.
  */
 function render(element: IElement, container: HTMLElement) {
-  rootFiber = {
+  wipRoot = {
     alternate: null,
     return: null,
     child: null,
@@ -49,7 +49,7 @@ function render(element: IElement, container: HTMLElement) {
       children: [element], // 这里的child还不是fiber
     },
   };
-  nextUnitOfWork = rootFiber; // 开启渲染
+  nextUnitOfWork = wipRoot; // 开启渲染
   console.group('Render Phase');
   console.info('Render Start...');
   requestIdleCallback(workLoop);
@@ -69,7 +69,7 @@ function updateObjectComponent(fiber: IFiber) {
   }
   const children = fiber.props.children;
   // 2. 遍历children创建子Fiber,构建一层Fiber树
-  createChildrenFiber(fiber, children);
+  reconcileChildren(fiber, children);
 }
 
 /**
@@ -79,16 +79,17 @@ function updateObjectComponent(fiber: IFiber) {
  */
 function updateFunctionComponent(fiber: IFiber) {
   const children = [(fiber.type as Function)(fiber.props)];
-  createChildrenFiber(fiber, children);
+  reconcileChildren(fiber, children);
 }
 
 /**
- * Creates child fibers for a given parent fiber.
+ * Reconciles the children of a fiber node.
+ * Create children fiber nodes and link them together.
  *
- * @param fiber - The parent fiber.
- * @param children - An array of child elements.
+ * @param fiber - The fiber node to reconcile the children for.
+ * @param children - The array of children to reconcile.
  */
-function createChildrenFiber(fiber: IFiber, children: ChildType[]): void {
+function reconcileChildren(fiber: IFiber, children: ChildType[]): void {
   let alternateFiber = fiber.alternate?.child; // 第一次渲染时，alternateFiber为null
   let prevFiber: IFiber = null;
 
@@ -185,8 +186,8 @@ function isFunctionComponent(fiber: IFiber): boolean {
  */
 function commitRoot(fiber: IFiber) {
   commitWork(fiber.child);
-  prevRootFiber = rootFiber; // 保存当前的根节点
-  rootFiber = null; // 清空rootFiber，表示commit结束
+  prevRootFiber = wipRoot; // 保存当前的根节点
+  wipRoot = null; // 清空rootFiber，表示commit结束
 }
 
 /**
@@ -268,7 +269,7 @@ function updateProps(
 }
 
 function update() {
-  rootFiber = {
+  wipRoot = {
     alternate: prevRootFiber, // 指向上一次的根节点
     return: null,
     child: null,
@@ -279,7 +280,7 @@ function update() {
     props: prevRootFiber.props, // 保持上一次的props
   };
 
-  nextUnitOfWork = rootFiber;
+  nextUnitOfWork = wipRoot;
 }
 
 /**
