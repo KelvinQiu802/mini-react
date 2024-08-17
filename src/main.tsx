@@ -31,7 +31,7 @@ function App({ name, age }: Props) {
       <button onClick={handleClick}>Increment</button>
       <br />
       <label htmlFor='message'>Message</label>
-      <input type='text' id='message' onInput={handleInput} />
+      <input type='text' id='message' onInput={handleInput} value={msg} />
     </div>
   );
 }
