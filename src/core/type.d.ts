@@ -1,5 +1,6 @@
 type ElementType = string | Function;
 type ChildType = IElement | ITextNode;
+type Flags = 'PLACEMENT' | 'UPDATE' | 'DELETION';
 
 interface IElement {
   type: ElementType;
@@ -22,7 +23,8 @@ interface IFiber {
   child: IFiber;
   sibling: IFiber;
   type: ElementType;
-  stateNode: Node;
+  stateNode: HTMLElement | Text;
+  flag: Flags;
   props: {
     children: ChildType[];
   };

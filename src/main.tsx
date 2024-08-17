@@ -9,14 +9,29 @@ interface Props {
   age: number;
 }
 
+let counter = 10; // 目前没有时间useState，所以用一个全局变量代替
+let msg = '';
+
 function App({ name, age }: Props) {
+  const handleClick = () => {
+    counter++;
+    Reaction.update();
+  };
+  const handleInput = (e) => {
+    msg = e.target.value;
+    Reaction.update();
+  };
   return (
     <div>
       <h1 style='color: red'>This is Title</h1>
       <h2>
-        Hello {name} {age}
+        Hello {name} {age} {msg}
       </h2>
       <h3>Mini React</h3>
+      <button onClick={handleClick}>Increment</button>
+      <br />
+      <label htmlFor='message'>Message</label>
+      <input type='text' id='message' onInput={handleInput} />
     </div>
   );
 }
@@ -24,9 +39,8 @@ function App({ name, age }: Props) {
 function Wrapper() {
   return (
     <div>
-      <App name={'Kelvin'} age={21} />
-      <App name={'Kelvin'} age={21} />
-      <button onClick={() => console.log('Hello World')}>Counter</button>
+      <App name={'Kelvin'} age={counter} />
+      <App name={'Kelvin'} age={counter} />
     </div>
   );
 }

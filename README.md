@@ -152,3 +152,9 @@ React.createElement(App, null)
 在JSX中，事件以`on`开头
 
 将`fiber.props`中所有以`on`开头的属性解析出来，并注册到事件
+
+## 更新Props
+
+更新`props`的过程首先要经过`diff`，找到前后两棵fiber树的不同处，然后创建更新任务
+
+在每一次`render`后，都需要保留本次的fiber树，作为下一次的`fiber.alternate`
