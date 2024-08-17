@@ -146,3 +146,9 @@ function App({
  */
 React.createElement(App, null)
 ```
+
+## 注册事件
+
+在JSX中，事件以`on`开头
+
+将`fiber.props`中所有以`on`开头的属性解析出来，并注册到事件

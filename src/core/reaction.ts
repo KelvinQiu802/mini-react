@@ -193,7 +193,7 @@ function createDOM(type: string): Node {
 }
 
 /**
- * Updates the properties of a DOM node with the values from the given props object.
+ * Updates the properties and events of a DOM node with the values from the given props object.
  *
  * @param {Object} props - The props object containing the property-value pairs to update.
  * @param {Node} dom - The DOM node to update.
@@ -202,7 +202,12 @@ function createDOM(type: string): Node {
 function updateProps(props: Object, dom: Node): void {
   for (const key in props) {
     if (key !== 'children' && props.hasOwnProperty(key)) {
-      dom[key] = props[key];
+      if (key.startsWith('on')) {
+        const eventType = key.slice(2).toLowerCase();
+        dom.addEventListener(eventType, props[key]);
+      } else {
+        dom[key] = props[key];
+      }
     }
   }
 }

@@ -26,6 +26,7 @@ function Wrapper() {
     <div>
       <App name={'Kelvin'} age={21} />
       <App name={'Kelvin'} age={21} />
+      <button onClick={() => console.log('Hello World')}>Counter</button>
     </div>
   );
 }
