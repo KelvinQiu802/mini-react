@@ -139,6 +139,11 @@ function reconcileChildren(fiber: IFiber, children: ChildType[]): void {
     }
     prevFiber = newFiber;
   }
+  // 如果旧的fiber节点多于新的fiber节点，删除多余的
+  while (alternateFiber) {
+    deletions.push(alternateFiber);
+    alternateFiber = alternateFiber.sibling;
+  }
 }
 
 /**
