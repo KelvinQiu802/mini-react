@@ -9,15 +9,7 @@ interface Props {
   age: number;
 }
 
-let toggle = true;
-
-function Foo() {
-  return <div>FOO</div>;
-}
-
-function Bar() {
-  return <div>BAR</div>;
-}
+let toggle = false;
 
 function App({ name, age }: Props) {
   const handleClick = () => {
@@ -26,10 +18,7 @@ function App({ name, age }: Props) {
   };
   return (
     <div>
-      {/* <h5>
-        {name} {age}
-      </h5> */}
-      <div>{toggle ? <Foo /> : <Bar />}</div>
+      <div>{toggle && <h1>Toggle is true</h1>}</div>
       <button onClick={handleClick}>Toggle</button>
     </div>
   );

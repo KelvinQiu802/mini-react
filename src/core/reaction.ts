@@ -31,6 +31,7 @@ function workLoop(ddl: IdleDeadline) {
   }
   requestIdleCallback(workLoop);
 }
+
 /**
  * Renders the given element into the specified container.
  *
@@ -113,16 +114,19 @@ function reconcileChildren(fiber: IFiber, children: ChildType[]): void {
       };
     } else {
       // type不一致，创建新的，删除旧的
-      newFiber = {
-        alternate: null,
-        return: fiber,
-        child: null,
-        sibling: null,
-        type: child.type,
-        stateNode: null,
-        props: child.props,
-        flag: 'PLACEMENT',
-      };
+      // child有可能是false，这时候跳过渲染
+      if (child) {
+        newFiber = {
+          alternate: null,
+          return: fiber,
+          child: null,
+          sibling: null,
+          type: child.type,
+          stateNode: null,
+          props: child.props,
+          flag: 'PLACEMENT',
+        };
+      }
       if (alternateFiber) {
         deletions.push(alternateFiber);
       }
@@ -137,7 +141,10 @@ function reconcileChildren(fiber: IFiber, children: ChildType[]): void {
     } else {
       prevFiber.sibling = newFiber;
     }
-    prevFiber = newFiber;
+
+    if (newFiber) {
+      prevFiber = newFiber;
+    }
   }
   // 如果旧的fiber节点多于新的fiber节点，删除多余的
   while (alternateFiber) {
@@ -352,10 +359,12 @@ function createElement(
     type,
     props: {
       ...props,
-      children: children.map((child) =>
+      children: children.map((child) => {
         // 如果子节点是对象，直接返回；如果是其他（字符串，数字），创建文本节点
-        typeof child === 'object' ? child : createTextNode(child)
-      ),
+        return typeof child === 'string' || typeof child === 'number'
+          ? createTextNode(child)
+          : child;
+      }),
     },
   };
 }
