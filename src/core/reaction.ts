@@ -8,6 +8,7 @@ const Reaction = {
 let nextUnitOfWork: IFiber = null;
 let wipRoot: IFiber = null; // 根节点, commitRoot 时用到
 let prevRootFiber: IFiber = null; // 上一次的根节点
+let deletions: IFiber[] = []; // 需要删除的节点，在commit阶段删除
 
 /**
  * The workLoop function performs a work loop until there is no more work to be done or the idle deadline is reached.
@@ -111,7 +112,7 @@ function reconcileChildren(fiber: IFiber, children: ChildType[]): void {
         flag: 'UPDATE',
       };
     } else {
-      // 新建fiber节点
+      // type不一致，创建新的，删除旧的
       newFiber = {
         alternate: null,
         return: fiber,
@@ -122,6 +123,9 @@ function reconcileChildren(fiber: IFiber, children: ChildType[]): void {
         props: child.props,
         flag: 'PLACEMENT',
       };
+      if (alternateFiber) {
+        deletions.push(alternateFiber);
+      }
     }
 
     if (alternateFiber) {
@@ -185,9 +189,26 @@ function isFunctionComponent(fiber: IFiber): boolean {
  * @param {IFiber} rootFiber - The root fiber representing the component tree.
  */
 function commitRoot(fiber: IFiber) {
+  commitDeletions(deletions);
   commitWork(fiber.child);
   prevRootFiber = wipRoot; // 保存当前的根节点
   wipRoot = null; // 清空rootFiber，表示commit结束
+  deletions = [];
+}
+
+function commitDeletions(deletions: IFiber[]) {
+  deletions.forEach((fiber) => {
+    let parentFiber = fiber.return; // 找到有DOM节点的父节点
+    while (!parentFiber.stateNode) {
+      parentFiber = parentFiber.return;
+    }
+    if (fiber.stateNode) {
+      parentFiber.stateNode.removeChild(fiber.stateNode);
+    } else {
+      // FC
+      parentFiber.stateNode.removeChild(fiber.child.stateNode);
+    }
+  });
 }
 
 /**
