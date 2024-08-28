@@ -7,8 +7,8 @@ const Reaction = {
 
 let nextUnitOfWork: IFiber = null;
 let wipRoot: IFiber = null; // 根节点, commitRoot 时用到
-let prevRootFiber: IFiber = null; // 上一次的根节点
 let deletions: IFiber[] = []; // 需要删除的节点，在commit阶段删除
+let wipFiber: IFiber = null; // 当前工作的fiber节点, 用于更新, 不用每一次都从根节点开始
 
 /**
  * The workLoop function performs a work loop until there is no more work to be done or the idle deadline is reached.
@@ -18,6 +18,11 @@ let deletions: IFiber[] = []; // 需要删除的节点，在commit阶段删除
 function workLoop(ddl: IdleDeadline) {
   while (nextUnitOfWork && ddl.timeRemaining() > 1) {
     nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
+
+    if (wipRoot?.sibling?.type === nextUnitOfWork?.type) {
+      // 当更新完这个组件后，结束
+      nextUnitOfWork = undefined;
+    }
   }
 
   if (!nextUnitOfWork && wipRoot) {
@@ -80,6 +85,7 @@ function updateObjectComponent(fiber: IFiber) {
  * @param fiber - The fiber representing the function component.
  */
 function updateFunctionComponent(fiber: IFiber) {
+  wipFiber = fiber;
   const children = [(fiber.type as Function)(fiber.props)];
   reconcileChildren(fiber, children);
 }
@@ -203,7 +209,6 @@ function isFunctionComponent(fiber: IFiber): boolean {
 function commitRoot(fiber: IFiber) {
   commitDeletions(deletions);
   commitWork(fiber.child);
-  prevRootFiber = wipRoot; // 保存当前的根节点
   wipRoot = null; // 清空rootFiber，表示commit结束
   deletions = [];
 }
@@ -302,18 +307,15 @@ function updateProps(
 }
 
 function update() {
-  wipRoot = {
-    alternate: prevRootFiber, // 指向上一次的根节点
-    return: null,
-    child: null,
-    sibling: null,
-    type: null,
-    flag: null,
-    stateNode: prevRootFiber.stateNode,
-    props: prevRootFiber.props, // 保持上一次的props
+  const currentFiber = wipFiber;
+  return () => {
+    // 闭包，保存当前的fiber节点，当组件更新的时候，可以直接从这个组件开始
+    wipRoot = {
+      ...currentFiber,
+      alternate: currentFiber,
+    };
+    nextUnitOfWork = wipRoot;
   };
-
-  nextUnitOfWork = wipRoot;
 }
 
 /**

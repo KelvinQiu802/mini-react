@@ -1,5 +1,5 @@
 /**@jsx Reaction.createElement */
-import Reaction, { update } from './core/reaction';
+import Reaction from './core/reaction';
 import { createRoot } from './core/reaction-dom';
 
 const root = document.getElementById('root');
@@ -12,6 +12,7 @@ interface Props {
 let toggle = false;
 
 function App({ name, age }: Props) {
+  const update = Reaction.update();
   const handleClick = () => {
     toggle = !toggle;
     update();
