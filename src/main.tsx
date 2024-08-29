@@ -1,5 +1,5 @@
 /**@jsx Reaction.createElement */
-import Reaction from './core/reaction';
+import Reaction, { useState } from './core/reaction';
 import { createRoot } from './core/reaction-dom';
 
 const root = document.getElementById('root');
@@ -9,18 +9,19 @@ interface Props {
   age: number;
 }
 
-let toggle = false;
-
 function App({ name, age }: Props) {
-  const update = Reaction.update();
+  const [count, setCount] = useState(1);
+  const [bar, setBar] = useState(2);
   const handleClick = () => {
-    toggle = !toggle;
-    update();
+    setCount((v) => v + 1);
+  };
+  const handleBar = () => {
+    setBar((v) => v + 1);
   };
   return (
     <div>
-      <div>{toggle && <h1>Toggle is true</h1>}</div>
-      <button onClick={handleClick}>Toggle</button>
+      <button onClick={handleClick}>{count}</button>
+      <button onClick={handleBar}>{bar}</button>
     </div>
   );
 }

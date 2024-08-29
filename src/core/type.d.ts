@@ -28,4 +28,5 @@ interface IFiber {
   props: {
     children: ChildType[];
   };
+  stateHooks?: { state: any }[];
 }

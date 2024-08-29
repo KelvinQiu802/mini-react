@@ -3,12 +3,14 @@ const Reaction = {
   renderRecursively,
   render,
   update,
+  useState,
 };
 
 let nextUnitOfWork: IFiber = null;
 let wipRoot: IFiber = null; // 根节点, commitRoot 时用到
 let deletions: IFiber[] = []; // 需要删除的节点，在commit阶段删除
 let wipFiber: IFiber = null; // 当前工作的fiber节点, 用于更新, 不用每一次都从根节点开始
+let hookIndex: number; // 当前useState的索引
 
 /**
  * The workLoop function performs a work loop until there is no more work to be done or the idle deadline is reached.
@@ -86,8 +88,35 @@ function updateObjectComponent(fiber: IFiber) {
  */
 function updateFunctionComponent(fiber: IFiber) {
   wipFiber = fiber;
+  wipFiber.stateHooks = [];
+  hookIndex = 0;
   const children = [(fiber.type as Function)(fiber.props)];
   reconcileChildren(fiber, children);
+}
+
+function useState<T>(init: T): [T, (action: (v: T) => T) => void] {
+  const currentFiber = wipFiber;
+
+  // 从currentFiber中拿到旧的state, 如果没有，初始化为init
+  const oldStateHook = currentFiber?.alternate?.stateHooks[hookIndex];
+  const stateHook = {
+    state: oldStateHook ? oldStateHook.state : init,
+  };
+  hookIndex++;
+  currentFiber.stateHooks.push(stateHook); // 保存新的state到fiber中
+
+  function setState(action: (v: T) => T): void {
+    // 拿到新的state
+    stateHook.state = action(stateHook.state);
+    // 触发更新
+    wipRoot = {
+      ...currentFiber,
+      alternate: currentFiber,
+    };
+    nextUnitOfWork = wipRoot;
+  }
+
+  return [stateHook.state, setState];
 }
 
 /**
@@ -387,5 +416,5 @@ function createTextNode(text: string): ITextNode {
   };
 }
 
-export { createElement, renderRecursively, render, update };
+export { createElement, renderRecursively, render, update, useState };
 export default Reaction;
